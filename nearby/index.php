@@ -2,6 +2,19 @@
 	//Gets the parking spaces nearby.
 	//http://localhost/parking/api/nearby/?lat=39.0991&lng=-84.5127
 	
+	/* More accurate query
+	 
+	 SELECT 	name,
+		ROUND(69*ST_Distance(POINT(latitude,longitude), POINT(39.075061, -84.447163)), 2) AS distance,
+		available_spots
+	 FROM parking_place
+	 JOIN parking_info
+	 ON id = place_id
+	 ORDER BY SQRT(POW(latitude - 39.075061, 2) + POW(longitude - -84.447163, 2) + POW(available_spots - 25.0, 2)) ASC
+	 
+	*/
+	
+	
 	include_once("../parking_util_functions.php");
 	
 	$MILES_PER_LATITUDE = 69;
