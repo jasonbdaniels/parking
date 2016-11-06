@@ -1,6 +1,6 @@
-# Near By
+# Nearby
 
-API end point used get near by parking spots.
+API end point used get nearby parking spots.
 
 ## Protocol
 
