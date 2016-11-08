@@ -27,12 +27,12 @@ The response is a JSON object formatted as follows:
 {
   "parking_places": [
     {
-      "id": <number>,
-			"name": <string>,
-			"latitude": <number>,
-			"longitude": <number>,
-			"total_spots": <number>,
-			"available_spots": <number>,
+	"id": <number>,
+	"name": <string>,
+	"latitude": <number>,
+	"longitude": <number>,
+	"total_spots": <number>,
+	"available_spots": <number>,
     }
   ]
 }
