@@ -12,15 +12,17 @@ GET
 
 - `parkplaceid` Id of the parking place.
 
-## Response
-
-Response is a JSON Object formated as follows:
+## Example
 
 ```
+curl http://domain/parking/api/getinfo/?parkplaceid=5
+
 {
-  "info": {
-    "spots": <number>,
-    "available_spots": <number>
-  }
+	"valid": 1,
+	"message": "Got info.",
+	"info": {
+		"spots": 25,
+		"available_spots": 25
+	}
 }
 ```
