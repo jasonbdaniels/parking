@@ -24,14 +24,18 @@ GET
 ```
 curl http://domain/parking/api/nearby/?lat=39.0991&lng=-84.5127&detail=1
 
-[{
-	"id": 5,
-	"name": "New Parking Name",
-	"latitude": 39.0990982056,
-	"longitude": -84.5127029419,
-	"total_spots": 25,
-	"available_spots": 25
-}]
+{
+	"valid": 1,
+	"message": "Nearby parking spots, sorted by best available.",
+	"nearby": [{
+		"id": 5,
+		"name": "New Parking Name",
+		"latitude": 39.0990982056,
+		"longitude": -84.5127029419,
+		"total_spots": 25,
+		"available_spots": 25
+	}]
+}
 ```
 
 `total_spots` and `available_spots` are only returend with the `detail` parameter.
