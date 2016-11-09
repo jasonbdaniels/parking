@@ -67,7 +67,10 @@
 			array_push($nearbyPlaces, $parkingPlace);
 		}
 		
-		echo json_encode($nearbyPlaces);
+		$responseMap = getValidMessageMap("Nearby parking spots, sorted by best available.");
+		$responseMap["nearby"] = $nearbyPlaces;
+		
+		echo json_encode($responseMap);
 	}
 	else {
 		echo "Failed to prepare. <br> $query <br> $db->error";
