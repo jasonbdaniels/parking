@@ -37,7 +37,7 @@
 	
 	if($preparedQuery = $db->prepare($query)) {
 		if(!$preparedQuery->bind_param("dddddd", $lat, $lng, $lat, $lng, $lat, $lng)) {
-			echo "Failed to prepare. <br> $query <br> $db->error";
+			echo createInvalidMessage("Failed to bind ($db->error): $query");
 			exit;
 		}
 		$preparedQuery->execute();
@@ -73,6 +73,7 @@
 		echo json_encode($responseMap);
 	}
 	else {
-		echo "Failed to prepare. <br> $query <br> $db->error";
+		echo createInvalidMessage("Failed to prepare ($db->error): $query");
+		exit;
 	}
 ?>
