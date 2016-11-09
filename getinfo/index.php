@@ -1,6 +1,8 @@
 <?php
 	include_once("../parking_util_functions.php");
 	
+	header("Content-Type: application/json");
+	
 	if(!isset($_GET['parkplaceid'])){
 		echo createInvalidMessage("Require parkplaceid");
 		exit();
