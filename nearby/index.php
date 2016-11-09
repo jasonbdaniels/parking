@@ -2,7 +2,7 @@
 	//Gets the parking spaces nearby.
 	//http://localhost/parking/api/nearby/?lat=39.0991&lng=-84.5127
 	
-	header("Content-Type: application/javascript");
+	header("Content-Type: application/json");
 	
 	include_once "../parking_util_functions.php";
 	
