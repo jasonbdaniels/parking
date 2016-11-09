@@ -2,78 +2,9 @@
 	//Gets the parking spaces nearby.
 	//http://localhost/parking/api/nearby/?lat=39.0991&lng=-84.5127
 	
-	/* More accurate query
-	 
-	 SELECT 	name,
-		ROUND(69*ST_Distance(POINT(latitude,longitude), POINT(39.075061, -84.447163)), 2) AS distance,
-		available_spots
-	 FROM parking_place
-	 JOIN parking_info
-	 ON id = place_id
-	 ORDER BY SQRT(POW(latitude - 39.075061, 2) + POW(longitude - -84.447163, 2) + POW(available_spots - 25.0, 2)) ASC
-	 
-	*/
+	header("Content-Type: application/javascript");
 	
-	
-	include_once("../parking_util_functions.php");
-	
-	$MILES_PER_LATITUDE = 69;
-	
-	function calculateDistanceAway($startingDegree, $distanceInMiles){
-		$distanceInDegrees = $distanceInMiles/69;
-		
-		return $startingDegree + $distanceInDegrees;
-	}
-	
-	function getPlacesNearby($db, $minLat, $maxLat, $minLng, $maxLng){
-		$nearbyQuery = "SELECT id, name, latitude, longitude FROM parking_place WHERE ? <= latitude AND latitude <= ? AND ? <= longitude AND longitude <= ?";
-		
-		$nearbyPrepare = $db->prepare($nearbyQuery);
-		$nearbyPrepare->bind_param("dddd", $minLat, $maxLat, $minLng, $maxLng);
-		$nearbyPrepare->execute();
-		$nearbyPrepare->bind_result($id, $name, $latitude, $longitude);
-	
-		$resultsArray = array();
-	
-		while($nearbyPrepare->fetch()){
-			$parkingPlace = array();
-		
-			$parkingPlace["id"] = $id;
-			$parkingPlace["name"] = $name;
-			$parkingPlace["latitude"] = $latitude;
-			$parkingPlace["longitude"] = $longitude;
-		
-			array_push($resultsArray, $parkingPlace);
-		}
-		
-		return $resultsArray;
-	}
-	
-	function getDetailedPlacesNearby($db, $minLat, $maxLat, $minLng, $maxLng){
-		$nearbyQuery = "SELECT pp.id, pp.name, pp.latitude, pp.longitude, pi.spots, pi.available_spots FROM parking_place AS pp, parking_info AS pi WHERE pp.id=pi.place_id AND ? <= latitude AND latitude <= ? AND ? <= longitude AND longitude <= ?";
-		
-		$nearbyPrepare = $db->prepare($nearbyQuery);
-		$nearbyPrepare->bind_param("dddd", $minLat, $maxLat, $minLng, $maxLng);
-		$nearbyPrepare->execute();
-		$nearbyPrepare->bind_result($id, $name, $latitude, $longitude, $totalSpots, $availableSpots);
-	
-		$resultsArray = array();
-	
-		while($nearbyPrepare->fetch()){
-			$parkingPlace = array();
-		
-			$parkingPlace["id"] = $id;
-			$parkingPlace["name"] = $name;
-			$parkingPlace["latitude"] = $latitude;
-			$parkingPlace["longitude"] = $longitude;
-			$parkingPlace["total_spots"] = $totalSpots;
-			$parkingPlace["available_spots"] = $availableSpots;
-		
-			array_push($resultsArray, $parkingPlace);
-		}
-		
-		return $resultsArray;
-	}
+	include_once "../parking_util_functions.php";
 	
 	if(!isset($_GET["lat"]) || !isset($_GET["lng"])){
 		echo createInvalidMessage("Require both lat and lng values.");
@@ -83,30 +14,62 @@
 	$lat = $_GET["lat"];
 	$lng = $_GET["lng"];
 	
-	$searchRadiusInMiles = 15;
-	
-	//Find min and max latitude.
-	$minLat = calculateDistanceAway($lat, -$searchRadiusInMiles);
-	$maxLat = calculateDistanceAway($lat, $searchRadiusInMiles);
-	
-	//Find approximate min and max longitude.
-	$minLng = calculateDistanceAway($lng, -$searchRadiusInMiles);
-	$maxLng = calculateDistanceAway($lng, $searchRadiusInMiles);
-	
 	//Query the database
-	$db = createMysqli();
+	$selectStatement = "SELECT	id,".
+							"name,".
+							"latitude,".
+							"longitude,".
+							"ROUND(69*ST_Distance(POINT(latitude,longitude), POINT(?, ?)), 2) AS distance";
 	
 	if(isset($_GET["detail"]) && $_GET["detail"] == 1){
-		$resultsArray = getDetailedPlacesNearby($db, $minLat, $maxLat, $minLng, $maxLng);
-	}
-	else{
-		$resultsArray = getPlacesNearby($db, $minLat, $maxLat, $minLng, $maxLng);
+		$selectStatement .= ", spots, available_spots";
+		$isDetailed = TRUE;
 	}
 	
-	$responseArray = getValidMessageMap("Got parking places nearby");
+	$query = "$selectStatement ".
+			"FROM parking_place ".
+			"JOIN parking_info ".
+			"ON id = place_id ".
+			"WHERE ROUND(69*ST_Distance(POINT(latitude,longitude), POINT(?, ?)), 2) <= 5.125 ".
+			"ORDER BY SQRT(POW(latitude - ?, 2) + POW(longitude - ?, 2) + POW(LEAST(available_spots, 5) - 5.0, 2)) ASC;";
 	
-	$responseArray["parking_places"] = $resultsArray;
+	$db = createMysqli();
 	
-	
-	echo json_encode($responseArray);
+	if($preparedQuery = $db->prepare($query)) {
+		if(!$preparedQuery->bind_param("dddddd", $lat, $lng, $lat, $lng, $lat, $lng)) {
+			echo "Failed to prepare. <br> $query <br> $db->error";
+			exit;
+		}
+		$preparedQuery->execute();
+		
+		if($isDetailed) {
+			$preparedQuery->bind_result($id, $name, $latitude, $longitude, $distance, $totalSpots, $availableSpots);
+		}
+		else {
+			$preparedQuery->bind_result($id, $name, $latitude, $longitude, $distance);
+		}
+		
+		$nearbyPlaces = array();
+		
+		while($preparedQuery->fetch()) {
+			$parkingPlace = array();
+			
+			$parkingPlace["id"] = $id;
+			$parkingPlace["name"] = $name;
+			$parkingPlace["latitude"] = $latitude;
+			$parkingPlace["longitude"] = $longitude;
+			
+			if($isDetailed) {
+				$parkingPlace["total_spots"] = $totalSpots;
+				$parkingPlace["available_spots"] = $availableSpots;
+			}
+			
+			array_push($nearbyPlaces, $parkingPlace);
+		}
+		
+		echo json_encode($nearbyPlaces);
+	}
+	else {
+		echo "Failed to prepare. <br> $query <br> $db->error";
+	}
 ?>
