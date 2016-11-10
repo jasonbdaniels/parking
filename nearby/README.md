@@ -22,7 +22,7 @@ GET
 ## Example
 
 ```
-curl http://domain/parking/api/nearby/?lat=39.0991&lng=-84.5127&detail=1
+curl "http://domain/parking/api/nearby/?lat=39.0991&lng=-84.5127&detail=1"
 
 {
 	"valid": 1,
