@@ -9,7 +9,7 @@ Must provide a top level *credentials.php* file with the following variables set
 $SQL_HOST = "";
 $SQL_USERNAME = "";
 $SQL_PASSWORD = "";
-$SQL_DATABSE = "";
+$SQL_DATABASE = "";
 ```
 
 # SQL Schema
